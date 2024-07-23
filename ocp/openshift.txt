@@ -1,0 +1,10 @@
+namespace: "gitlab-dev"
+
+# this is the Dockerfile registry/image/tag
+docker_registry: "docker.io"
+docker_image: "uniwinux/nodejs-16"
+docker_tag: "1-90"
+
+chart_version: 0.1.0
+
+group: uniwinux

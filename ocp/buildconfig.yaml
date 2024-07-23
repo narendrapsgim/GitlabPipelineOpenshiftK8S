@@ -1,0 +1,66 @@
+kind: Secret
+apiVersion: v1
+metadata:
+  name: git-pull-config
+  namespace: xNAMESPACEx
+data:
+  .gitconfig: W2h0dHBdCiAgICAgICAgc3NsdmVyaWZ5ID0gZmFsc2UK
+type: Opaque
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: docker-pull-registry
+  namespace: xNAMESPACEx
+data:
+  .dockerconfigjson: >-
+    eyJhdXRocyI6eyJkb2NrZXIuaW8iOnsidXNlcm5hbWUiOiJ2ZW5lcmF5YW4iLCJwYXNzd29yZCI6Ik5lb3BhdCM0NTY3OCIsImVtYWlsIjoidW51c2VkIiwiYXV0aCI6ImRtVnVaWEpoZVdGdU9rNWxiM0JoZENNME5UWTNPQT09In19fQ==
+type: kubernetes.io/dockerconfigjson
+---   
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: xNAMEx
+  namespace: xNAMESPACEx
+  labels:
+    name: xNAMEx
+spec:
+  triggers:
+    - type: ConfigChange
+  source:
+    type: Git
+    git:
+      uri: 'https://gitlab-ci-token:xGITLAB_CI_GLOBAL_READONLY_TOKENx@xCI_API_V4_URL2x/xCI_PROJECT_NAMESPACEx/xREPO_NAMEx.git' 
+      ref: main
+    sourceSecret:
+      name: git-pull-config
+    contextDir: "/"     
+    dockerfile: | 
+      FROM  xDOCKER_REGISTRYx/xDOCKER_IMAGEx:xDOCKER_TAGx
+      USER default
+      WORKDIR /opt/app-root/src/
+      RUN mkdir -p /opt/app-root/src/app/ && cd /opt/app-root/src/app/ \ 
+          && curl -k -H "PRIVATE-TOKEN:xGITLAB_CI_GLOBAL_READONLY_TOKENx" -o node.tar.gz xCI_API_V4_URLx/projects/xCI_PROJECT_IDx/jobs/xCI_JOB_IDx/artifacts/xNPM_FOLDERx/node.tar.gz \
+          && size=$(wc -c node.tar.gz | awk '{print $1}') && if [[ "$size" -lt "5000" ]]; then exit 1; fi \
+          && tar xzf node.tar.gz && rm -f node.tar.gz  
+      COPY --chown=default:root . /opt/app-root/src/app/        
+      ENV PORT 3000
+      EXPOSE 3000
+      RUN echo '#!/bin/sh' > /opt/app-root/src/app/entrypoint.sh \
+      	&& echo 'set -x' >> /opt/app-root/src/app/entrypoint.sh \
+      	&& echo 'sh -c "cd /opt/app-root/src/app; npm start"' >> /opt/app-root/src/app/entrypoint.sh \
+      	&& chmod a+x /opt/app-root/src/app/entrypoint.sh	      
+      ENTRYPOINT /opt/app-root/src/app/entrypoint.sh            
+  strategy:
+    type: Docker
+    dockerStrategy:
+      forcePull: true 
+      pullSecret:
+        name: docker-pull-registry
+  output:  
+    to:
+      kind: DockerImage
+      name: xDOCKER_REGISTRYx/xGROUPx/xNPM_NAMEx:xNPM_VERSIONx
+    pushSecret:
+      name: docker-pull-registry
+      

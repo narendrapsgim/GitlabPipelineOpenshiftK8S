@@ -1,0 +1,112 @@
+stages:          # List of stages for jobs, and their order of execution
+  - build
+  - buildconfig
+  # - deploy
+
+default:
+  tags: ['uni-runner']  
+  artifacts:
+    paths:
+      - ocp/* 
+    expire_in: 1d      
+  
+build-job:      # This job runs in the build stage, which runs first.
+  stage: build   
+  image: docker.io/node:17.9.0
+  environment: $CI_ENV
+  script: 
+    - |
+      echo "Starting to build project"
+      export HOME=$PWD
+      export NPM_FOLDER=ocp
+      npm config set strict-ssl false
+      npm install --no-fund      
+      export NPM_NAME=$(node -p "require('./package.json').name") # get variable from npm
+      export NPM_VERSION=$(node -p "require('./package.json').version")
+      echo "NPM_NAME=$NPM_NAME" > $NPM_FOLDER/build.env # save it for next pipeline
+      echo "NPM_VERSION=$NPM_VERSION" >> $NPM_FOLDER/build.env      
+      echo "NPM_FOLDER=$NPM_FOLDER" >> $NPM_FOLDER/build.env
+      tar -czf ./$NPM_FOLDER/node.tar.gz ./node_modules 
+      
+
+buildconfig-job:        # This job is to create the image, store in registry, setup the credential and create the buildconfig.
+  stage: buildconfig 
+  image: quay.io/openshift/origin-cli:latest
+  environment: $CI_ENV
+  script:
+    - |
+      echo "Starting to create container image"
+      exit 0
+      # source ocp/build.env # return the save variables from the previous pipeline
+      # export API_OCP_SERVER2=$(echo $API_OCP_SERVER | sed "s/\/api\/v4//g")  # remove api v4 
+      # oc login --token=$DEPLOY_SA_TOKEN --server=$API_OCP_SERVER2 --insecure-skip-tls-verify             
+      # export DOCKER_REGISTRY=$(cat ocp/openshift.txt | grep 'docker_registry:' | awk '{print $2}' | tr -d '"') # get variable and remove extra double quotes
+      # export NAMESPACE=$(cat ocp/openshift.txt | grep 'namespace:' | awk '{print $2}' | tr -d '"')
+      # sed "s/xNAMESPACEx/$NAMESPACE/g" -i ocp/buildconfig.yaml
+      # export DOCKER_IMAGE=$(cat ocp/openshift.txt | grep 'docker_image:' | awk '{print $2}' | tr -d '"')  
+      # export DOCKER_TAG=$(cat ocp/openshift.txt | grep 'docker_tag:' | awk '{print $2}' | tr -d '"')       
+      # export DOCKER_REGISTRY=$(cat ocp/openshift.txt | grep 'docker_registry:' | awk '{print $2}' | tr -d '"')
+      # export DOCKER_REGISTRY2=$(echo $DOCKER_REGISTRY | sed 's/\:/\\\:/g')  # add : so that sed will work    
+      # export DOCKER_REGISTRY3=$(echo $DOCKER_REGISTRY2 | sed 's/\//\\\//g') # add / so that sed will work     
+      # sed "s/xDOCKER_REGISTRYx/$DOCKER_REGISTRY3/g" -i ocp/buildconfig.yaml # start creating the replace script, replace only one file at a time
+      # export DOCKER_IMAGE2=$(echo $DOCKER_IMAGE | sed 's/\//\\\//g') 
+      # sed "s/xDOCKER_IMAGEx/$DOCKER_IMAGE2/g" -i ocp/buildconfig.yaml
+      # sed "s/xDOCKER_TAGx/$DOCKER_TAG/g" -i ocp/buildconfig.yaml
+      # sed "s/xNPM_NAMEx/$NPM_NAME/g" -i ocp/buildconfig.yaml
+      # sed "s/xNAMEx/$NPM_NAME/g" -i ocp/buildconfig.yaml
+      # export GROUP=$(cat ocp/openshift.txt | grep "group:" | awk '{print $2}')
+      # sed "s/xGROUPx/$GROUP/g" -i ocp/buildconfig.yaml
+      # sed "s/xNPM_VERSIONx/$NPM_VERSION/g" -i ocp/buildconfig.yaml
+      # sed "s/xCI_PROJECT_IDx/$CI_PROJECT_ID/g" -i ocp/buildconfig.yaml
+      # sed "s/xCI_JOB_IDx/$CI_JOB_ID/g" -i ocp/buildconfig.yaml
+      # export CI_PROJECT_NAMESPACE2=$(echo $CI_PROJECT_NAMESPACE | sed 's/\//\\\//g')
+      # sed "s/xCI_PROJECT_NAMESPACEx/$CI_PROJECT_NAMESPACE2/g" -i ocp/buildconfig.yaml
+      # sed "s/xREPO_NAMEx/$CI_PROJECT_NAME/g" -i ocp/buildconfig.yaml
+      # export NPM_FOLDER2=$(echo $NPM_FOLDER | sed 's/\//\\\//g')
+      # sed "s/xNPM_FOLDERx/$NPM_FOLDER2/g" -i ocp/buildconfig.yaml   
+      # sed "s/xGITLAB_CI_GLOBAL_READONLY_TOKENx/$GITLAB_CI_GLOBAL_READONLY_TOKEN/g" -i ocp/buildconfig.yaml  
+      # export CI_API_V4_URL2=$CI_API_V4_URL
+      # export CI_API_V4_URL3=$(echo $CI_API_V4_URL2 | sed 's/\:/\\\:/g') # add : so that sed will work    
+      # export CI_API_V4_URL4=$(echo $CI_API_V4_URL3 | sed 's/\//\\\//g') # add / so that sed will work
+      # sed "s/xCI_API_V4_URLx/$CI_API_V4_URL4/g" -i ocp/buildconfig.yaml     
+      # export CI_API_V4_URL5=$(echo $CI_API_V4_URL2 | sed "s/https:\/\///g") # remove https 
+      # export CI_API_V4_URL6=$(echo $CI_API_V4_URL5 | sed "s/\/api\/v4//g")  # remove api v4 
+      # export CI_API_V4_URL7=$(echo $CI_API_V4_URL6 | sed 's/\:/\\\:/g')      
+      # sed "s/xCI_API_V4_URL2x/$CI_API_V4_URL7/g" -i ocp/buildconfig.yaml 
+      # sed "s/xCI_ROUTE_HOSTx/$CI_ROUTE_HOST/g" -i ocp/buildconfig.yaml
+      # export TARGETPORT=$(cat ocp/openshift.txt | grep 'targetport:' | awk '{print $2}' | tr -d '"') 
+      # sed "s/xTARGETPORTx/$TARGETPORT/g" -i ocp/buildconfig.yaml      
+      # export COUNT=$(oc get build|grep $NPM_NAME|wc -l)
+      # cat ocp/buildconfig.yaml
+      # oc apply -f ocp/buildconfig.yaml --wait=true    
+      # if [[ "$COUNT" != "0" ]]; then oc start-build $NPM_NAME; fi 
+      # cp /.kube/config $NPM_FOLDER/ # save credentail for helm use
+      # echo "NPM_NAME=$NPM_NAME" > $NPM_FOLDER/build2 # do it again for next pipeline -with new build2
+      # echo "NPM_FOLDER=$NPM_FOLDER" >> $NPM_FOLDER/build2
+      # echo "DOCKER_REGISTRY=$DOCKER_REGISTRY3" >> $NPM_FOLDER/build2
+      # echo "NPM_VERSION=$NPM_VERSION" >> $NPM_FOLDER/build2
+      # echo "NAMESPACE=$NAMESPACE" >> $NPM_FOLDER/build2
+      # echo "GROUP=$GROUP" >> $NPM_FOLDER/build2  
+      # export CHART_VERSION=$(cat ocp/openshift.txt | grep 'chart_version:' | awk '{print $2}' | tr -d '"')    
+      # echo "CHART_VERSION=$CHART_VERSION" >> $NPM_FOLDER/build2
+      
+.deploy-job:      # This job runs in the deploy stage.
+  stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
+  image: docker.io/alpine/helm:latest
+  environment: $CI_ENV
+  script: 
+    - |
+      source ocp/build2 # return the save variables on the previous pipeline - do not use variable
+      chmod 600 -R helm/*.yaml # to remove the warnings on the console output
+      cp $NPM_FOLDER/config /.kube/ # return the config credentials from the previous pipeline so that helm can deploy
+      chmod 600 /.kube/config
+      sed "s/xAPP_VERSIONx/$NPM_VERSION/g" -i helm/Chart.yaml   # important to replace, for revisioning helm version
+      sed "s/xCHART_VERSIONx/$CHART_VERSION/g" -i helm/Chart.yaml   # important to replace, for revisioning helm version  
+      cd helm       
+      helm lint . --namespace $NAMESPACE --set image.registry=$DOCKER_REGISTRY --set image.repository=$GROUP/$NPM_NAME --set image.tag=$NPM_VERSION || exit 1 
+      #helm package .
+      #echo "helm charts - ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/api/stable/charts"
+      #curl -k --request POST --user gitlab-ci-token:$CI_JOB_TOKEN --form "chart=@"$NPM_NAME"-"$CHART_VERSION".tgz" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/api/stable/charts"
+      #helm repo index . --merge index.yaml --url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/stable/charts         
+      helm upgrade --install $NPM_NAME . --namespace $NAMESPACE --set image.registry=$DOCKER_REGISTRY --set image.repository=$GROUP/$NPM_NAME --set image.tag=$NPM_VERSION       
+      # if build is still running, wait, it will fixed the new pod itself      
