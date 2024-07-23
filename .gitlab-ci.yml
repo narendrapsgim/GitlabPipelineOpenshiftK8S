@@ -13,7 +13,6 @@ default:
 build-job:      # This job runs in the build stage, which runs first.
   stage: build   
   image: docker.io/node:17.9.0
-  environment: $CI_ENV
   script: 
     - |
       echo "Starting to build project"
@@ -32,7 +31,6 @@ build-job:      # This job runs in the build stage, which runs first.
 buildconfig-job:        # This job is to create the image, store in registry, setup the credential and create the buildconfig.
   stage: buildconfig 
   image: quay.io/openshift/origin-cli:latest
-  environment: $CI_ENV
   script:
     - |
       echo "Starting to create container image"
@@ -93,7 +91,6 @@ buildconfig-job:        # This job is to create the image, store in registry, se
 .deploy-job:      # This job runs in the deploy stage.
   stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
   image: docker.io/alpine/helm:latest
-  environment: $CI_ENV
   script: 
     - |
       source ocp/build2 # return the save variables on the previous pipeline - do not use variable
