@@ -12,7 +12,8 @@ default:
 
 variables:
   APPVERSION: # extract from package.json
-  CHARTVERSION: 0.1.0      
+  CHARTVERSION: 0.1.0 
+  GITLAB_AGENT: "uniwinux1/agentr:agentr"     
   
 build-job:      # This job runs in the build stage, which runs first.
   stage: build   
