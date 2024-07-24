@@ -1,0 +1,28 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: {{ include "helm.fullname" . }}
+  namespace: {{ .Values.namespace.name }}
+spec:
+  triggers:
+  runPolicy: Serial
+  source:
+    type: Binary
+  strategy:
+    type: Docker
+    dockerStrategy:
+      buildArgs:
+        - name: DOCKER_IMAGE
+          value: {{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
+        - name: NPM_BIN
+          value: {{ .Values.args.npmbin }}
+        - name: ENV_CONTEXT
+          value: {{ .Values.args.envcontext }}  
+      pullSecret:
+        name: {{ .Values.pullsecret }}
+  output:
+    to:
+      kind: DockerImage
+      name: "{{ .Values.image.name }}:{{ .Values.image.version }}"
+    pushSecret:
+      name: {{ .Values.pullsecret }}       
