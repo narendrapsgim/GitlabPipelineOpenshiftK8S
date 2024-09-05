@@ -16,6 +16,7 @@ variables:
   GITLAB_AGENT: "uniwinux1/agentr:agentr"     
   
 build-job:      # This job runs in the build stage, which runs first.
+  environment: dev
   stage: build   
   image: docker.io/node:17.9.0
   script: 
@@ -34,6 +35,7 @@ build-job:      # This job runs in the build stage, which runs first.
       
 
 buildconfig-job:        # This job is to create the image, store in registry, setup the credential and create the buildconfig.
+  environment: dev
   stage: buildconfig 
   image: quay.io/openshift/origin-cli:latest
   script:
@@ -97,6 +99,7 @@ buildconfig-job:        # This job is to create the image, store in registry, se
       # echo "CHART_VERSION=$CHART_VERSION" >> $NPM_FOLDER/build2
       
 .deploy-job:      # This job runs in the deploy stage.
+  environment: dev
   stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
   image: docker.io/alpine/helm:latest
   script: 
